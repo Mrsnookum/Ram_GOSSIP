@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RamTok | Coming Soon</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        :root { --neon-cyan: #00f2fe; --neon-pink: #f472b6; --bg-dark: #0f172a; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg-dark); color: white; background: radial-gradient(circle at bottom left, #1e293b, #0f172a); overflow-x: hidden; }
+        .glass-container { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        
+        @keyframes floating {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .float-anim { animation: floating 3s infinite ease-in-out; }
+        
+        .feature-card { transition: all 0.3s ease; border-left: 4px solid transparent; }
+        .feature-card:hover { transform: translateX(5px); background: rgba(255, 255, 255, 0.06); }
+    </style>
+</head>
+<body class="max-w-md mx-auto min-h-screen relative pb-32">
+
+    <header class="sticky top-0 z-50 glass-container px-6 py-6 flex flex-col items-center rounded-b-[2.5rem] border-b border-cyan-500/20">
+        <div class="w-16 h-16 bg-gradient-to-tr from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-cyan-500/20 mb-3 float-anim">
+            <i class="fa-solid fa-video text-2xl text-slate-900"></i>
+        </div>
+        <h1 class="text-2xl font-black tracking-tighter uppercase">RamTok <span class="text-cyan-400">Labs</span></h1>
+        <p class="text-[10px] font-bold text-slate-500 tracking-[0.4em] uppercase mt-1">The Future of Class Media</p>
+    </header>
+
+    <section class="p-6 space-y-6">
+        <div class="flex items-center space-x-2 mb-2">
+            <div class="h-[1px] flex-1 bg-slate-800"></div>
+            <span class="text-[9px] font-black text-slate-600 uppercase tracking-widest">Upcoming Features</span>
+            <div class="h-[1px] flex-1 bg-slate-800"></div>
+        </div>
+
+        <div class="feature-card glass-container rounded-3xl p-5 border-l-cyan-500">
+            <div class="flex items-center space-x-4">
+                <div class="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center text-cyan-400">
+                    <i class="fa-solid fa-arrows-up-down"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-black text-white">Infinite Tea Scroll</h3>
+                    <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">Swipe through vertical class highlights, pranks, and study hacks without stopping.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="feature-card glass-container rounded-3xl p-5 border-l-pink-500">
+            <div class="flex items-center space-x-4">
+                <div class="w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center text-pink-400">
+                    <i class="fa-solid fa-microphone-lines"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-black text-white">Anonymous Voice-Overs</h3>
+                    <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">Add AI-distorted voice notes to your gossip clips to keep your identity 100% hidden.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="feature-card glass-container rounded-3xl p-5 border-l-purple-500">
+            <div class="flex items-center space-x-4">
+                <div class="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400">
+                    <i class="fa-solid fa-fire-burner"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-black text-white">Weekly Challenges</h3>
+                    <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">Participate in class-wide video trends to earn the "Trendsetter" profile badge.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="feature-card glass-container rounded-3xl p-5 border-l-green-400">
+            <div class="flex items-center space-x-4">
+                <div class="w-10 h-10 rounded-xl bg-green-400/10 flex items-center justify-center text-green-400">
+                    <i class="fa-solid fa-face-grin-tears"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-black text-white">Live Reactions</h3>
+                    <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">Drop emojis that float across the screen as you watch the hottest class moments.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="px-10 py-6 text-center">
+        <div class="glass-container rounded-2xl p-4 border-dashed border-slate-700">
+            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-loose">
+                Development Phase: <span class="text-cyan-400">0.2v</span><br>
+                Estimated Launch: <span class="text-white">Coming Soon</span>
+            </p>
+        </div>
+    </section>
+
+    <nav class="fixed bottom-4 left-4 right-4 max-w-md mx-auto glass-container rounded-[2rem] flex justify-around items-center py-4 border border-white/10 z-50">
+        <a href="index.html" class="flex flex-col items-center text-slate-500 hover:text-cyan-400">
+            <i class="fa-solid fa-house text-xl"></i>
+            <span class="text-[8px] mt-1 font-black uppercase">Home</span>
+        </a>
+        <a href="trending.html" class="flex flex-col items-center text-slate-500 hover:text-pink-400">
+            <i class="fa-solid fa-bolt text-xl"></i>
+            <span class="text-[8px] mt-1 font-black uppercase">Trends</span>
+        </a>
+        <div class="w-14 h-14 bg-slate-900 rounded-full flex items-center justify-center -mt-12 border-4 border-slate-900 shadow-xl">
+             <i class="fa-solid fa-play text-cyan-400 text-xl ml-1 animate-pulse"></i>
+        </div>
+        <a href="ramtok.html" class="flex flex-col items-center text-cyan-400">
+            <i class="fa-solid fa-video text-xl"></i>
+            <span class="text-[8px] mt-1 font-black uppercase">Ramtok</span>
+        </a>
+        <a href="profile.html" class="flex flex-col items-center text-slate-500 hover:text-cyan-400">
+            <i class="fa-solid fa-user text-xl"></i>
+            <span class="text-[8px] mt-1 font-black uppercase">Profile</span>
+        </a>
+    </nav>
+
+</body>
+</html>

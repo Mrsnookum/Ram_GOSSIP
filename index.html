@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ram GOSSIP | The Class Vibe</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        
+        :root {
+            --neon-cyan: #00f2fe;
+            --neon-purple: #9d50bb;
+            --neon-pink: #f472b6;
+            --bg-dark: #0f172a;
+        }
+
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: var(--bg-dark); 
+            color: white;
+            background: radial-gradient(circle at top right, #1e293b, #0f172a);
+            overflow-x: hidden;
+        }
+
+        .glass-container {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+        }
+
+        .input-field {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(0, 242, 254, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.4);
+            outline: none;
+        }
+
+        .btn-gradient {
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-gradient:active { transform: scale(0.96); }
+
+        .btn-register-active {
+            border: 2px solid var(--neon-pink);
+            color: var(--neon-pink);
+            box-shadow: 0 0 10px rgba(244, 114, 182, 0.2);
+        }
+
+        .hide-view { display: none !important; }
+        
+        @keyframes glow {
+            0% { box-shadow: 0 0 5px var(--neon-cyan); }
+            50% { box-shadow: 0 0 20px var(--neon-cyan); }
+            100% { box-shadow: 0 0 5px var(--neon-cyan); }
+        }
+        .alive-glow { animation: glow 3s infinite; }
+        ::-webkit-scrollbar { width: 0px; }
+
+        .modal-active { display: flex !important; }
+
+        .loader {
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top: 3px solid var(--neon-cyan);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="max-w-md mx-auto min-h-screen relative">
+
+    <div id="toast" class="fixed top-10 left-1/2 -translate-x-1/2 z-[110] glass-container px-6 py-3 rounded-full border-cyan-500/50 hide-view transition-all duration-300">
+        <span id="toast-msg" class="text-sm font-bold text-cyan-400 text-center"></span>
+    </div>
+
+    <div id="loader-overlay" class="fixed inset-0 z-[120] bg-slate-950/60 backdrop-blur-md flex items-center justify-center hide-view">
+        <div class="flex flex-col items-center space-y-4">
+            <div class="loader"></div>
+            <p id="loader-text" class="text-cyan-400 text-xs font-bold tracking-widest uppercase">Syncing Gossip...</p>
+        </div>
+    </div>
+
+    <div id="custom-prompt" class="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-sm flex-col items-center justify-center p-6 hide-view">
+        <div class="glass-container w-full p-6 rounded-[2rem] border-pink-500/50 space-y-4">
+            <h3 class="text-lg font-bold text-pink-500">What's the gossip?</h3>
+            <textarea id="prompt-input" rows="3" class="input-field w-full rounded-xl p-4 text-white text-sm" placeholder="Spill the tea..."></textarea>
+            
+            <div class="flex items-center justify-between px-2">
+                <span class="text-xs text-slate-400 font-bold uppercase tracking-widest">Post Anonymously?</span>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="post-anon-toggle" class="sr-only peer" checked>
+                    <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-500"></div>
+                </label>
+            </div>
+
+            <div class="flex space-x-3">
+                <button onclick="closePrompt()" class="flex-1 py-3 rounded-xl border border-slate-700 text-slate-400 font-bold">Cancel</button>
+                <button onclick="submitNewPost()" class="flex-1 btn-gradient py-3 rounded-xl text-slate-900 font-black">POST</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="comment-modal" class="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-sm flex-col items-center justify-end hide-view">
+        <div class="glass-container w-full max-h-[80vh] p-6 rounded-t-[2.5rem] border-t border-cyan-500/50 flex flex-col relative">
+            <div class="w-12 h-1.5 bg-slate-700 rounded-full mx-auto mb-2 cursor-pointer" onclick="closeComments()"></div>
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="text-lg font-bold text-cyan-400">Comments</h3>
+                <button onclick="closeComments()" class="text-slate-400 hover:text-pink-500 transition-colors p-2">
+                    <i class="fa-solid fa-circle-xmark text-2xl"></i>
+                </button>
+            </div>
+
+            <div class="flex items-center justify-between px-2 mb-4 bg-white/5 p-2 rounded-xl border border-white/10">
+                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Reply Anonymously?</span>
+                <label class="relative inline-flex items-center cursor-pointer scale-75">
+                    <input type="checkbox" id="comment-anon-toggle" class="sr-only peer" checked>
+                    <div class="w-11 h-6 bg-slate-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
+                </label>
+            </div>
+            
+            <div id="comments-list" class="flex-1 overflow-y-auto space-y-4 mb-4 pr-2"></div>
+            <div class="flex space-x-2">
+                <input type="text" id="comment-input" class="input-field flex-1 rounded-xl p-3 text-white text-sm" placeholder="Add a comment...">
+                <button id="comment-send-btn" onclick="submitComment()" class="bg-cyan-500 w-12 h-12 rounded-xl text-slate-900 flex items-center justify-center transition-transform active:scale-90"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <section id="auth-view" class="p-6 flex flex-col items-center justify-center min-h-screen">
+        <div class="text-center mb-6">
+            <div class="relative inline-block">
+                <img src="logo.png" alt="Ram GOSSIP" class="w-32 h-32 mx-auto rounded-full alive-glow mb-4 border-2 border-cyan-400">
+            </div>
+            <h1 class="text-3xl font-extrabold tracking-tighter text-white">Ram Gossip</h1>
+            <p class="text-slate-400 text-sm italic">Where class life lives.</p>
+        </div>
+
+        <div class="flex w-full space-x-2 mb-6">
+            <button id="reg-btn" onclick="toggleAuth('register')" class="flex-1 py-2 rounded-lg font-bold text-sm btn-register-active uppercase tracking-widest">Register</button>
+            <button id="login-btn" onclick="toggleAuth('login')" class="flex-1 py-2 rounded-lg font-bold text-sm border-2 border-slate-700 text-slate-500 uppercase tracking-widest">Login</button>
+        </div>
+
+        <div class="glass-container w-full p-6 rounded-[2.5rem] space-y-4">
+            <div id="register-fields" class="space-y-4">
+                <input type="text" id="reg-name" placeholder="Full Name" class="input-field w-full rounded-xl p-4 text-white text-sm">
+                <div class="relative">
+                    <input type="text" id="reg-admin" placeholder="Admission (e.g. 894/25)" class="input-field w-full rounded-xl p-4 text-white text-sm">
+                    <span class="absolute right-4 top-4 text-lg">🇰🇪</span>
+                </div>
+                <input type="email" id="reg-email" placeholder="Email Address" class="input-field w-full rounded-xl p-4 text-white text-sm">
+                <input type="tel" id="reg-phone" placeholder="Phone Number" class="input-field w-full rounded-xl p-4 text-white text-sm">
+            </div>
+
+            <div id="login-fields" class="hide-view space-y-4">
+                <input type="text" id="login-admin" placeholder="Admission (e.g. 894/25)" class="input-field w-full rounded-xl p-4 text-white text-sm">
+            </div>
+
+            <input type="password" id="auth-pass" placeholder="Password" class="input-field w-full rounded-xl p-4 text-white text-sm">
+
+            <div class="flex items-center space-x-2 px-2 py-2">
+                <input type="checkbox" id="rules-check" class="w-4 h-4 rounded border-cyan-500 bg-transparent">
+                <label for="rules-check" class="text-[10px] text-slate-400">I agree to the friendly rules</label>
+            </div>
+            
+            <button id="main-auth-btn" onclick="handleAuthAction()" class="w-full btn-gradient text-slate-900 font-extrabold py-4 rounded-2xl shadow-xl shadow-cyan-500/20 uppercase tracking-widest">
+                Join The Buzz
+            </button>
+        </div>
+    </section>
+
+    <header id="app-header" class="hide-view sticky top-0 z-50 glass-container px-6 py-4 flex justify-between items-center rounded-b-3xl border-b border-cyan-500/30">
+        <div class="flex items-center space-x-2">
+            <img src="logo.png" class="w-8 h-8 rounded-full border border-cyan-500">
+            <span class="text-lg font-black tracking-tighter text-cyan-400">RAM GOSSIP</span>
+        </div>
+        <div class="flex space-x-4">
+            <i class="fa-solid fa-bell text-slate-400"></i>
+            <button onclick="logout()"><i class="fa-solid fa-power-off text-pink-500"></i></button>
+        </div>
+    </header>
+
+    <section id="feed-view" class="hide-view pb-32">
+        <div class="flex space-x-4 overflow-x-auto p-4 no-scrollbar">
+            <div class="flex-shrink-0 text-center">
+                <div class="w-14 h-14 rounded-full border-2 border-pink-500 p-0.5 mb-1 overflow-hidden">
+                    <img id="user-header-pic" src="logo.png" class="w-full h-full object-cover rounded-full">
+                </div>
+                <span id="user-display-name" class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">You</span>
+            </div>
+        </div>
+
+        <div id="posts-container" class="p-4 space-y-6"></div>
+    </section>
+
+    <nav id="main-nav" class="hide-view fixed bottom-4 left-4 right-4 max-w-md mx-auto glass-container rounded-[2rem] flex justify-around items-center py-4 border border-white/10 z-50">
+        <a href="index.html" class="flex flex-col items-center text-cyan-400">
+            <i class="fa-solid fa-house text-xl"></i>
+            <span class="text-[10px] mt-1 font-bold">Home</span>
+        </a>
+        <a href="trending.html" class="flex flex-col items-center text-slate-500">
+            <i class="fa-solid fa-bolt text-xl"></i>
+            <span class="text-[10px] mt-1 font-bold">Trends</span>
+        </a>
+        
+        <button onclick="openPostPrompt()" class="bg-gradient-to-tr from-pink-500 to-purple-600 w-14 h-14 rounded-full flex items-center justify-center text-white shadow-lg shadow-pink-500/40 -mt-12 border-4 border-slate-900 transition-transform active:scale-90">
+            <i class="fa-solid fa-plus text-xl"></i>
+        </button>
+        
+        <a href="ramtok.html" class="flex flex-col items-center text-slate-500">
+            <i class="fa-solid fa-video text-xl"></i>
+            <span class="text-[10px] mt-1 font-bold">Ramtok</span>
+        </a>
+        <a href="profile.html" class="flex flex-col items-center text-slate-500">
+            <i class="fa-solid fa-user text-xl"></i>
+            <span class="text-[10px] mt-1 font-bold">Profile</span>
+        </a>
+    </nav>
+
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzb5FpETfVLJ_uyDj-LPhQnQ0QMhNjx8wvEOjY-mO_7H8bClROaLJnUVrltNDA5_gk/exec"; 
+        let currentAuthMode = 'register';
+        let activePostId = null;
+
+        function notify(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = message;
+            toast.classList.remove('hide-view');
+            setTimeout(() => { toast.classList.add('hide-view'); }, 3000);
+        }
+
+        function toggleLoader(show, message = "Syncing Gossip...") {
+            document.getElementById('loader-text').innerText = message;
+            document.getElementById('loader-overlay').classList.toggle('hide-view', !show);
+        }
+
+        function openPostPrompt() { document.getElementById('custom-prompt').classList.add('modal-active'); }
+        function closePrompt() { 
+            document.getElementById('custom-prompt').classList.remove('modal-active'); 
+            document.getElementById('prompt-input').value = "";
+        }
+
+        window.onload = () => {
+            const savedUser = localStorage.getItem('ram_gossip_user');
+            if (savedUser) {
+                const user = JSON.parse(savedUser);
+                updateUserUI(user);
+                showApp();
+                fetchFeed();
+            }
+        };
+
+        function updateUserUI(user) {
+            document.getElementById('user-display-name').innerText = user.name.split(' ')[0];
+            if (user.pic) {
+                document.getElementById('user-header-pic').src = user.pic;
+            }
+        }
+
+        function toggleAuth(mode) {
+            currentAuthMode = mode;
+            document.getElementById('register-fields').classList.toggle('hide-view', mode === 'login');
+            document.getElementById('login-fields').classList.toggle('hide-view', mode === 'register');
+            document.getElementById('reg-btn').className = mode === 'register' ? 'flex-1 py-2 rounded-lg font-bold text-sm btn-register-active uppercase tracking-widest' : 'flex-1 py-2 rounded-lg font-bold text-sm border-2 border-slate-700 text-slate-500 uppercase tracking-widest';
+            document.getElementById('login-btn').className = mode === 'login' ? 'flex-1 py-2 rounded-lg font-bold text-sm btn-register-active uppercase tracking-widest' : 'flex-1 py-2 rounded-lg font-bold text-sm border-2 border-slate-700 text-slate-500 uppercase tracking-widest';
+            document.getElementById('main-auth-btn').innerText = mode === 'register' ? 'Join The Buzz' : 'Welcome Back';
+        }
+
+        async function handleAuthAction() {
+            if (!document.getElementById('rules-check').checked) return notify("Agree to the rules! 😌");
+            const pass = document.getElementById('auth-pass').value;
+            if (!pass) return notify("Enter password! 🔑");
+
+            toggleLoader(true);
+            if (currentAuthMode === 'register') {
+                const name = document.getElementById('reg-name').value;
+                const admin = document.getElementById('reg-admin').value;
+                if (!name || !admin) { toggleLoader(false); return notify("Fill all fields! ✍️"); }
+                try {
+                    const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'register', name, admin, pass, email: document.getElementById('reg-email').value, phone: document.getElementById('reg-phone').value }) });
+                    const text = await res.text();
+                    if (text === "Success") {
+                        notify("Success! Please Login.");
+                        toggleAuth('login');
+                    } else { notify(text); }
+                } catch (e) { notify("Server Error!"); }
+            } else {
+                const admin = document.getElementById('login-admin').value;
+                try {
+                    const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'login', admin, pass }) });
+                    const json = await res.json();
+                    if (json.status === "Success") {
+                        localStorage.setItem('ram_gossip_user', JSON.stringify(json.user));
+                        updateUserUI(json.user);
+                        showApp();
+                        fetchFeed();
+                    } else notify("Wrong credentials!");
+                } catch (e) { notify("Login Failed!"); }
+            }
+            toggleLoader(false);
+        }
+
+        function showApp() {
+            document.getElementById('auth-view').classList.add('hide-view');
+            ['app-header', 'feed-view', 'main-nav'].forEach(id => document.getElementById(id).classList.remove('hide-view'));
+        }
+
+        function logout() { localStorage.clear(); location.reload(); }
+
+        async function fetchFeed() {
+            toggleLoader(true);
+            try {
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'fetchPosts' }) });
+                const posts = await res.json();
+                const container = document.getElementById('posts-container');
+                container.innerHTML = "";
+                posts.forEach(post => {
+                    const html = `
+                        <div class="glass-container rounded-[2rem] p-5 border-l-4 ${post.anonymous ? 'border-pink-500' : 'border-cyan-500'} mb-4">
+                            <div class="flex justify-between items-center mb-3 text-[10px] text-slate-500">
+                                <span class="font-bold ${post.anonymous ? 'text-pink-400' : 'text-cyan-400'} uppercase">${post.anonymous ? 'Anonymous Gossip' : post.user}</span>
+                                <span>${new Date(post.time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+                            </div>
+                            <p class="text-slate-200 text-sm mb-4">${post.content}</p>
+                            <div class="flex space-x-6 border-t border-white/5 pt-3">
+                                <button onclick="handleLike('${post.id}', this)" class="text-pink-500 text-xs font-bold"><i class="fa-solid fa-fire mr-1"></i> <span class="count">${post.likes}</span></button>
+                                <button onclick="openComments('${post.id}')" class="text-cyan-400 text-xs font-bold">
+                                    <i class="fa-solid fa-comment mr-1"></i> 
+                                    <span id="comment-count-${post.id}">${post.commentCount || 0}</span> Comments
+                                </button>
+                            </div>
+                        </div>`;
+                    container.insertAdjacentHTML('beforeend', html);
+                });
+            } catch (e) { notify("Feed failed."); }
+            toggleLoader(false);
+        }
+
+        async function submitNewPost() {
+            const msg = document.getElementById('prompt-input').value;
+            const isAnon = document.getElementById('post-anon-toggle').checked;
+            const user = JSON.parse(localStorage.getItem('ram_gossip_user'));
+            if (!msg.trim()) return notify("Type something! 🤐");
+            toggleLoader(true, "Spreading Gossip... 🔥");
+            try {
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'submitPost', content: msg, user: user.name, anonymous: isAnon }) });
+                if (await res.text() === "Success") {
+                    closePrompt();
+                    notify("Tea spilled! ☕");
+                    fetchFeed();
+                }
+            } catch (e) { notify("Failed!"); }
+            toggleLoader(false);
+        }
+
+        async function handleLike(postId, btn) {
+            btn.disabled = true;
+            try {
+                await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'likePost', postId }) });
+                let count = btn.querySelector('.count');
+                count.innerText = parseInt(count.innerText) + 1;
+                btn.classList.add('animate-pulse', 'text-yellow-400');
+            } catch (e) { notify("Error!"); }
+        }
+
+        async function openComments(postId) {
+            activePostId = postId;
+            const list = document.getElementById('comments-list');
+            list.innerHTML = `<div class="flex flex-col items-center p-4"><div class="loader"></div><p class="text-[10px] text-cyan-400 mt-2">Fetching talk...</p></div>`;
+            document.getElementById('comment-modal').classList.remove('hide-view');
+            document.getElementById('comment-modal').classList.add('modal-active');
+            
+            try {
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'fetchComments', postId }) });
+                const comments = await res.json();
+                list.innerHTML = comments.length ? "" : `<p class="text-xs text-slate-500 text-center py-8">No gossip here yet. Start the talk! 🗣️</p>`;
+                comments.forEach(c => {
+                    const html = `
+                        <div class="bg-white/5 p-3 rounded-2xl border border-white/10 mb-2">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-[10px] font-bold ${c.anonymous ? 'text-pink-400' : 'text-cyan-400'}">${c.anonymous ? 'Anonymous' : c.user}</span>
+                                <span class="text-[8px] text-slate-500">${new Date(c.time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+                            </div>
+                            <p class="text-slate-300 text-xs">${c.content}</p>
+                        </div>`;
+                    list.insertAdjacentHTML('beforeend', html);
+                });
+            } catch (e) { list.innerHTML = "<p class='text-xs text-red-400 text-center'>Class talk error.</p>"; }
+        }
+
+        function closeComments() { 
+            document.getElementById('comment-modal').classList.add('hide-view');
+            document.getElementById('comment-modal').classList.remove('modal-active'); 
+            activePostId = null; 
+        }
+
+        async function submitComment() {
+            const input = document.getElementById('comment-input');
+            const msg = input.value;
+            const isAnon = document.getElementById('comment-anon-toggle').checked;
+            const user = JSON.parse(localStorage.getItem('ram_gossip_user'));
+            const sendBtn = document.getElementById('comment-send-btn');
+            
+            if (!msg.trim()) return;
+            sendBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i>`;
+            sendBtn.disabled = true;
+
+            try {
+                await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'submitComment', postId: activePostId, user: user.name, content: msg, anonymous: isAnon }) });
+                input.value = "";
+                notify("Comment sent! 💬");
+                openComments(activePostId);
+                const countSpan = document.getElementById(`comment-count-${activePostId}`);
+                if(countSpan) countSpan.innerText = parseInt(countSpan.innerText) + 1;
+            } catch (e) { notify("Failed!"); }
+            sendBtn.innerHTML = `<i class="fa-solid fa-paper-plane"></i>`;
+            sendBtn.disabled = false;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trending | Ram GOSSIP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        :root { --neon-cyan: #00f2fe; --neon-purple: #9d50bb; --neon-pink: #f472b6; --bg-dark: #0f172a; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg-dark); color: white; background: radial-gradient(circle at top right, #1e293b, #0f172a); overflow-x: hidden; }
+        .glass-container { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .hide-view { display: none !important; }
+        
+        /* Rank Badge Style */
+        .rank-badge { position: absolute; top: -12px; left: -12px; width: 34px; height: 34px; border-radius: 50%; display: flex; items-center; justify-center; font-weight: 800; font-size: 14px; border: 3px solid var(--bg-dark); z-index: 10; box-shadow: 0 0 15px rgba(0,0,0,0.5); }
+        .gold { background: linear-gradient(135deg, #ffd700, #b8860b); color: black; box-shadow: 0 0 20px rgba(255, 215, 0, 0.4); }
+        .silver { background: linear-gradient(135deg, #e0e0e0, #757575); color: black; }
+        .bronze { background: linear-gradient(135deg, #cd7f32, #8b4513); color: white; }
+        
+        /* Pulse Animations */
+        @keyframes pulse-border {
+            0% { border-color: rgba(244, 114, 182, 0.3); box-shadow: 0 0 5px rgba(244, 114, 182, 0.1); }
+            50% { border-color: rgba(244, 114, 182, 1); box-shadow: 0 0 20px rgba(244, 114, 182, 0.4); }
+            100% { border-color: rgba(244, 114, 182, 0.3); box-shadow: 0 0 5px rgba(244, 114, 182, 0.1); }
+        }
+        .heat-pulse { animation: pulse-border 2s infinite ease-in-out; border-width: 2px !important; }
+        
+        /* Custom Scrollbar */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Tag Style */
+        .trend-tag { transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.1); white-space: nowrap; }
+        .trend-tag.active { background: var(--neon-pink); border-color: var(--neon-pink); color: black; font-weight: 800; box-shadow: 0 0 15px rgba(244, 114, 182, 0.5); }
+    </style>
+</head>
+<body class="max-w-md mx-auto min-h-screen relative pb-32">
+
+    <div id="toast" class="fixed top-10 left-1/2 -translate-x-1/2 z-[110] glass-container px-6 py-3 rounded-full border-pink-500/50 hide-view transition-all duration-300">
+        <span id="toast-msg" class="text-sm font-bold text-pink-400"></span>
+    </div>
+
+    <header class="sticky top-0 z-50 glass-container px-6 py-4 flex justify-between items-center rounded-b-3xl border-b border-pink-500/30">
+        <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-bolt text-pink-500 text-xl animate-pulse"></i>
+            <span class="text-lg font-black tracking-tighter text-white">THE HEAT MAP</span>
+        </div>
+        <img src="logo.png" class="w-8 h-8 rounded-full border border-pink-500">
+    </header>
+
+    <div class="p-4 overflow-x-auto flex space-x-3 no-scrollbar mt-2">
+        <button onclick="filterHeat('All')" class="trend-tag active px-5 py-2 rounded-full glass-container text-xs font-bold uppercase tracking-widest">🔥 All Heat</button>
+        <button onclick="filterHeat('Anatomy')" class="trend-tag px-5 py-2 rounded-full glass-container text-xs font-bold uppercase tracking-widest text-slate-400">#Anatomy</button>
+        <button onclick="filterHeat('Finals')" class="trend-tag px-5 py-2 rounded-full glass-container text-xs font-bold uppercase tracking-widest text-slate-400">#Finals</button>
+        <button onclick="filterHeat('Lab')" class="trend-tag px-5 py-2 rounded-full glass-container text-xs font-bold uppercase tracking-widest text-slate-400">#LabTea</button>
+        <button onclick="filterHeat('Crush')" class="trend-tag px-5 py-2 rounded-full glass-container text-xs font-bold uppercase tracking-widest text-slate-400">#Crush</button>
+    </div>
+
+    <section class="p-4">
+        <h2 class="text-[10px] font-black text-pink-500 uppercase tracking-[0.3em] mb-4 text-center">Class VIP Leaderboard</h2>
+        <div class="glass-container rounded-[2.5rem] p-6 flex justify-around items-end space-x-2 border border-white/5">
+            <div class="flex flex-col items-center group cursor-pointer" onclick="notify('2nd Most Engaged: Anon Gossip')">
+                <div class="w-12 h-12 rounded-full border-2 border-slate-400 p-0.5 mb-2 transition-transform group-active:scale-90">
+                    <img src="logo.png" class="rounded-full grayscale">
+                </div>
+                <div class="h-12 w-10 bg-slate-500/30 rounded-t-xl flex items-center justify-center border-x border-t border-slate-400/30">
+                    <i class="fa-solid fa-medal text-slate-400"></i>
+                </div>
+                <span class="text-[8px] mt-2 font-black text-slate-400 uppercase">Gossip</span>
+            </div>
+            <div class="flex flex-col items-center group cursor-pointer" onclick="notify('Class Legend: Spill the Tea!')">
+                <i class="fa-solid fa-crown text-yellow-500 text-lg mb-1 animate-bounce"></i>
+                <div class="w-20 h-20 rounded-full border-2 border-pink-500 p-1 mb-2 shadow-[0_0_30px_rgba(244,114,182,0.3)] transition-transform group-active:scale-95">
+                    <img src="logo.png" class="rounded-full border-2 border-pink-500">
+                </div>
+                <div class="h-24 w-14 bg-gradient-to-t from-pink-600 to-pink-400 rounded-t-2xl flex items-center justify-center font-black text-xl text-slate-900 shadow-lg">1</div>
+                <span class="text-[10px] mt-2 font-black text-pink-500 uppercase tracking-widest">Star</span>
+            </div>
+            <div class="flex flex-col items-center group cursor-pointer" onclick="notify('3rd Most Engaged: Admin')">
+                <div class="w-12 h-12 rounded-full border-2 border-amber-700 p-0.5 mb-2 transition-transform group-active:scale-90">
+                    <img src="logo.png" class="rounded-full grayscale">
+                </div>
+                <div class="h-8 w-10 bg-amber-800/30 rounded-t-xl flex items-center justify-center border-x border-t border-amber-700/30">
+                    <i class="fa-solid fa-award text-amber-700"></i>
+                </div>
+                <span class="text-[8px] mt-2 font-black text-amber-600 uppercase">Admin</span>
+            </div>
+        </div>
+    </section>
+
+    <section id="trending-container" class="p-4 space-y-8">
+        <div class="flex flex-col items-center py-20">
+            <div class="loader"></div>
+            <p class="text-[10px] text-pink-500 font-bold mt-4 tracking-widest uppercase">Calculating Heat...</p>
+        </div>
+    </section>
+
+    <nav class="fixed bottom-4 left-4 right-4 max-w-md mx-auto glass-container rounded-[2rem] flex justify-around items-center py-4 border border-white/10 z-50">
+        <a href="index.html" class="flex flex-col items-center text-slate-500">
+            <i class="fa-solid fa-house text-xl"></i>
+            <span class="text-[10px] mt-1 font-bold">Home</span>
+        </a>
+        <a href="trending.html" class="flex flex-col items-center text-pink-400">
+            <i class="fa-solid fa-bolt text-xl"></i>
+            <span class="text-[10px] mt-1 font-bold">Trends</span>
+        </a>
+        <div class="w-14 h-14 bg-slate-900 rounded-full flex items-center justify-center -mt-12 border-4 border-slate-900 shadow-[0_-5px_20px_rgba(244,114,182,0.2)]">
+             <i class="fa-solid fa-fire text-pink-500 text-2xl animate-pulse"></i>
+        </div>
+        <a href="ramtok.html" class="flex flex-col items-center text-slate-500">
+            <i class="fa-solid fa-video text-xl"></i>
+            <span class="text-[10px] mt-1 font-bold">Ramtok</span>
+        </a>
+        <a href="profile.html" class="flex flex-col items-center text-slate-500">
+            <i class="fa-solid fa-user text-xl"></i>
+            <span class="text-[10px] mt-1 font-bold">Profile</span>
+        </a>
+    </nav>
+
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzb5FpETfVLJ_uyDj-LPhQnQ0QMhNjx8wvEOjY-mO_7H8bClROaLJnUVrltNDA5_gk/exec";
+
+        function notify(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = message;
+            toast.classList.remove('hide-view');
+            setTimeout(() => { toast.classList.add('hide-view'); }, 3000);
+        }
+
+        async function loadTrending() {
+            try {
+                const res = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'fetchTrending' })
+                });
+                const posts = await res.json();
+                renderTrending(posts);
+            } catch (e) {
+                document.getElementById('trending-container').innerHTML = 
+                `<div class="text-center py-20 text-slate-500">
+                    <i class="fa-solid fa-triangle-exclamation text-2xl mb-2"></i>
+                    <p class="text-xs uppercase font-black">Connection Cold...</p>
+                </div>`;
+            }
+        }
+
+        function renderTrending(posts) {
+            const container = document.getElementById('trending-container');
+            container.innerHTML = "";
+
+            posts.forEach((post, index) => {
+                let rankClass = index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : 'bg-slate-800 text-slate-400';
+                let isHot = post.heat > 10; // Logic for pulsing effect
+                
+                const html = `
+                    <div class="glass-container rounded-[2.5rem] p-6 border-l-4 ${index < 3 ? 'heat-pulse' : 'border-slate-800'} relative transition-all active:scale-95">
+                        <div class="rank-badge ${rankClass}">${index + 1}</div>
+                        
+                        <div class="flex justify-between items-center mb-4">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-bold border border-white/10">
+                                    ${post.anonymous ? '?' : post.user[0]}
+                                </div>
+                                <span class="text-[10px] font-black uppercase tracking-widest ${post.anonymous ? 'text-pink-400' : 'text-cyan-400'}">
+                                    ${post.anonymous ? 'Secret Gossip' : post.user}
+                                </span>
+                            </div>
+                            <div class="flex items-center space-x-2 px-3 py-1 bg-white/5 rounded-full border border-white/5">
+                                <i class="fa-solid fa-fire text-orange-500 text-[10px]"></i>
+                                <span class="text-[10px] font-bold text-orange-500">${post.likes}</span>
+                            </div>
+                        </div>
+
+                        <p class="text-slate-200 text-sm leading-relaxed mb-6 font-medium">${post.content}</p>
+
+                        <div class="flex justify-between items-center pt-4 border-t border-white/5">
+                            <div class="flex space-x-4">
+                                <button onclick="notify('Reacting from Trends... 🔥')" class="flex items-center space-x-1 text-slate-500 hover:text-pink-500 transition-colors">
+                                    <i class="fa-solid fa-heart text-xs"></i>
+                                    <span class="text-[10px] font-bold">React</span>
+                                </button>
+                                <button onclick="location.href='index.html'" class="flex items-center space-x-1 text-slate-500 hover:text-cyan-400 transition-colors">
+                                    <i class="fa-solid fa-comment text-xs"></i>
+                                    <span class="text-[10px] font-bold">${post.comments || 0} Talk</span>
+                                </button>
+                            </div>
+                            <span class="text-[9px] font-black text-slate-600 uppercase tracking-tighter">Heat Score: ${post.heat}</span>
+                        </div>
+                    </div>`;
+                container.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        function filterHeat(tag) {
+            document.querySelectorAll('.trend-tag').forEach(btn => {
+                btn.classList.remove('active');
+                btn.classList.add('text-slate-400');
+            });
+            event.currentTarget.classList.add('active');
+            event.currentTarget.classList.remove('text-slate-400');
+            notify(`Filtering for #${tag}...`);
+            loadTrending(); // In a full build, this would send the tag to the backend
+        }
+
+        window.onload = loadTrending;
+    </script>
+</body>
+</html>
