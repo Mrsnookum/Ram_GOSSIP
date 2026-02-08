@@ -68,27 +68,49 @@
 
         .modal-active { display: flex !important; }
 
+        /* ADVANCED RADAR LOADER */
+        @keyframes pulse-ring {
+            0% { transform: scale(0.33); opacity: 1; }
+            80%, 100% { transform: scale(1.5); opacity: 0; }
+        }
+        .pulse-container { position: relative; width: 120px; height: 120px; }
+        .pulse-ring {
+            content: ''; width: 240px; height: 240px;
+            background: var(--neon-cyan); border-radius: 50%;
+            position: absolute; top: -60px; left: -60px;
+            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+        .loading-text-glow { text-shadow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan); }
+        
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .loader {
             border: 3px solid rgba(255,255,255,0.1);
             border-top: 3px solid var(--neon-cyan);
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
+            border-radius: 50%; width: 24px; height: 24px;
             animation: spin 1s linear infinite;
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="max-w-md mx-auto min-h-screen relative">
 
-    <div id="toast" class="fixed top-10 left-1/2 -translate-x-1/2 z-[110] glass-container px-6 py-3 rounded-full border-cyan-500/50 hide-view transition-all duration-300">
+    <div id="toast" class="fixed top-10 left-1/2 -translate-x-1/2 z-[300] glass-container px-6 py-3 rounded-full border-cyan-500/50 hide-view transition-all duration-300">
         <span id="toast-msg" class="text-sm font-bold text-cyan-400 text-center"></span>
     </div>
 
-    <div id="loader-overlay" class="fixed inset-0 z-[120] bg-slate-950/60 backdrop-blur-md flex items-center justify-center hide-view">
-        <div class="flex flex-col items-center space-y-4">
-            <div class="loader"></div>
-            <p id="loader-text" class="text-cyan-400 text-xs font-bold tracking-widest uppercase">Syncing Gossip...</p>
+    <div id="loader-overlay" class="fixed inset-0 z-[250] bg-slate-950 flex flex-col items-center justify-center hide-view">
+        <div class="pulse-container flex items-center justify-center">
+            <div class="pulse-ring"></div>
+            <img src="logo.png" class="w-20 h-20 rounded-full z-10 border-2 border-cyan-400 alive-glow object-cover">
+        </div>
+        
+        <div class="mt-20 text-center px-10">
+            <h2 id="loader-text" class="text-cyan-400 text-lg font-black tracking-tighter uppercase loading-text-glow">Intercepting Gossip...</h2>
+            <div class="flex items-center justify-center space-x-1 mt-2">
+                <div class="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-bounce"></div>
+                <div class="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                <div class="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-bounce [animation-delay:-0.5s]"></div>
+            </div>
+            <p id="shuffle-msg" class="text-slate-500 text-[10px] font-bold uppercase tracking-[0.3em] mt-8 italic">Bypassing anatomy files...</p>
         </div>
     </div>
 
@@ -232,6 +254,15 @@
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzb5FpETfVLJ_uyDj-LPhQnQ0QMhNjx8wvEOjY-mO_7H8bClROaLJnUVrltNDA5_gk/exec"; 
         let currentAuthMode = 'register';
         let activePostId = null;
+        const SHUFFLE_MESSAGES = [
+            "Scanning class group chats...",
+            "Bypassing anatomy files...",
+            "Checking cafeteria receipts...",
+            "Unlocking secret status updates...",
+            "Filtering the hottest tea...",
+            "Brewing the gossip...",
+            "Identifying anonymous sources..."
+        ];
 
         function notify(message) {
             const toast = document.getElementById('toast');
@@ -240,9 +271,25 @@
             setTimeout(() => { toast.classList.add('hide-view'); }, 3000);
         }
 
-        function toggleLoader(show, message = "Syncing Gossip...") {
-            document.getElementById('loader-text').innerText = message;
-            document.getElementById('loader-overlay').classList.toggle('hide-view', !show);
+        function toggleLoader(show, message = "Intercepting Gossip...") {
+            const overlay = document.getElementById('loader-overlay');
+            const loaderText = document.getElementById('loader-text');
+            const shuffleEl = document.getElementById('shuffle-msg');
+            
+            loaderText.innerText = message;
+            overlay.classList.toggle('hide-view', !show);
+
+            if (show) {
+                let i = 0;
+                const shuffleInterval = setInterval(() => {
+                    if (overlay.classList.contains('hide-view')) {
+                        clearInterval(shuffleInterval);
+                        return;
+                    }
+                    shuffleEl.innerText = SHUFFLE_MESSAGES[i % SHUFFLE_MESSAGES.length];
+                    i++;
+                }, 800);
+            }
         }
 
         function openPostPrompt() { document.getElementById('custom-prompt').classList.add('modal-active'); }
@@ -283,7 +330,7 @@
             const pass = document.getElementById('auth-pass').value;
             if (!pass) return notify("Enter password! 🔑");
 
-            toggleLoader(true);
+            toggleLoader(true, "Verifying Identity...");
             if (currentAuthMode === 'register') {
                 const name = document.getElementById('reg-name').value;
                 const admin = document.getElementById('reg-admin').value;
