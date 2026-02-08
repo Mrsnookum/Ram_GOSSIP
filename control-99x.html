@@ -230,8 +230,41 @@ async function executeDelete(postId) {
         showModal('Failed', 'Network error. Check your connection.', '📡');
     }
 }
+async function triggerBroadcast() {
+    const bcInput = document.getElementById('bc-msg');
+    const content = bcInput.value.trim();
+    
+    if (!content) {
+        showModal('Empty Message', 'Please type something to broadcast.', '⚠️');
+        return;
+    }
 
-        window.onload = fetchAdminData;
+    // Show loading state
+    showModal('Processing', 'Sending alerts to all students...', '📡', []); 
+    
+    try {
+        const res = await fetch(SCRIPT_URL, { 
+            method: 'POST', 
+            body: JSON.stringify({ 
+                action: 'adminBroadcast', 
+                content: content 
+            }) 
+        });
+        
+        const result = await res.text();
+        
+        if (result === "Success") {
+            bcInput.value = ""; // Clear the input
+            showModal('Success', 'Broadcast successfully pushed to feed and emails!', '✅');
+            fetchAdminData(); // Refresh stats and feed
+        } else {
+            showModal('Error', 'Server failed to process broadcast.', '❌');
+        }
+    } catch (e) {
+        showModal('Failed', 'Network error. Check your Script URL and connection.', '📡');
+    }
+}
+    window.onload = fetchAdminData;
     </script>
 </body>
 </html>
