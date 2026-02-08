@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control Center | Ram GOSSIP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        :root { --neon-cyan: #00f2fe; --neon-pink: #f472b6; --bg-dark: #020617; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg-dark); color: white; overflow-x: hidden; }
+        .glass { background: rgba(30, 41, 59, 0.4); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
+        .nav-item { transition: all 0.3s ease; }
+        .nav-item.active { background: linear-gradient(90deg, rgba(0,242,254,0.1), transparent); border-left: 4px solid var(--neon-cyan); color: var(--neon-cyan); }
+        .hide-view { display: none !important; }
+        .sidebar { transition: transform 0.3s ease; z-index: 100; }
+        @media (max-width: 1024px) { .sidebar { transform: translateX(-100%); } .sidebar.open { transform: translateX(0); } }
+    </style>
+</head>
+<body class="flex min-h-screen">
+
+    <button onclick="toggleSidebar()" class="lg:hidden fixed bottom-6 right-6 z-[110] bg-cyan-500 text-slate-950 w-14 h-14 rounded-full shadow-2xl flex items-center justify-center text-xl">
+        <i class="fa-solid fa-bars-staggered"></i>
+    </button>
+
+    <aside id="sidebar" class="sidebar fixed lg:static w-72 h-screen glass border-r border-white/5 flex flex-col p-6">
+        <div class="mb-10 px-2">
+            <h1 class="text-xl font-black tracking-tighter uppercase italic">Control <span class="text-cyan-400">Center</span></h1>
+            <p class="text-[8px] font-bold text-slate-500 tracking-[0.4em] uppercase">Security Module</p>
+        </div>
+
+        <nav class="flex-1 space-y-2">
+            <button onclick="switchTab('dashboard')" id="tab-dashboard" class="nav-item active w-full flex items-center space-x-4 p-4 rounded-xl text-sm font-bold">
+                <i class="fa-solid fa-chart-pie w-5"></i> <span>Dashboard</span>
+            </button>
+            <button onclick="switchTab('feed')" id="tab-feed" class="nav-item w-full flex items-center space-x-4 p-4 rounded-xl text-sm font-bold">
+                <i class="fa-solid fa-bullhorn w-5"></i> <span>Live Feed</span>
+            </button>
+            <button onclick="switchTab('users')" id="tab-users" class="nav-item w-full flex items-center space-x-4 p-4 rounded-xl text-sm font-bold">
+                <i class="fa-solid fa-user-shield w-5"></i> <span>Class Registry</span>
+            </button>
+        </nav>
+
+        <div class="mt-auto p-4 glass rounded-2xl border-cyan-500/20">
+            <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-2">Admin Session</p>
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 rounded-full bg-cyan-500 flex items-center justify-center text-slate-950 font-black text-xs">A</div>
+                <span class="text-xs font-bold">Main Admin</span>
+            </div>
+        </div>
+    </aside>
+
+    <main class="flex-1 h-screen overflow-y-auto p-4 lg:p-10 relative">
+        
+        <div id="view-dashboard" class="tab-view space-y-8 animate-in fade-in duration-500">
+            <div class="flex justify-between items-center">
+                <h2 class="text-2xl font-black">Performance <span class="text-slate-500">Stats</span></h2>
+                <button onclick="fetchAdminData()" class="p-3 glass rounded-xl hover:text-cyan-400"><i class="fa-solid fa-rotate"></i></button>
+            </div>
+
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="glass p-6 rounded-[2rem] border-l-4 border-pink-500">
+                    <span id="stat-posts" class="text-3xl font-black">--</span>
+                    <p class="text-[9px] uppercase font-bold text-slate-500 tracking-widest mt-1">Total Posts</p>
+                </div>
+                </div>
+
+            <div class="glass p-8 rounded-[2.5rem] border-dashed border-2 border-cyan-500/20">
+                <h3 class="text-cyan-400 font-black text-xs uppercase tracking-widest mb-4">Quick Broadcast</h3>
+                <textarea id="bc-msg" class="w-full bg-slate-900/50 rounded-2xl p-4 text-sm border border-white/5 focus:border-cyan-500 outline-none" rows="3" placeholder="Type official announcement..."></textarea>
+                <button onclick="triggerBroadcast()" class="mt-4 bg-cyan-500 text-slate-950 px-8 py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-xl shadow-cyan-500/20 transition-transform active:scale-95">Push to Feed & Email</button>
+            </div>
+        </div>
+
+        <div id="view-users" class="tab-view hide-view space-y-6">
+            <h2 class="text-2xl font-black text-cyan-400">Student <span class="text-white">Registry</span></h2>
+            <div class="overflow-hidden glass rounded-3xl">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-white/5 text-slate-500 uppercase font-black">
+                        <tr>
+                            <th class="p-5">Name</th>
+                            <th class="p-5">Admin No</th>
+                            <th class="p-5">Status</th>
+                            <th class="p-5 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-table-body">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="view-feed" class="tab-view hide-view space-y-4">
+            <h2 class="text-2xl font-black text-pink-500">Unmasked <span class="text-white">Feed</span></h2>
+            <div id="admin-feed-container" class="space-y-4 max-w-2xl"></div>
+        </div>
+
+    </main>
+
+    <div id="admin-modal" class="fixed inset-0 z-[200] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-6 hide-view">
+        <div class="glass max-w-md w-full p-8 rounded-[2.5rem] text-center border-white/10">
+            <div id="modal-icon" class="text-5xl mb-6"></div>
+            <h3 id="modal-title" class="text-xl font-black mb-2 uppercase">Title</h3>
+            <p id="modal-msg" class="text-slate-400 text-sm mb-8"></p>
+            <div id="modal-actions" class="flex space-x-3"></div>
+        </div>
+    </div>
+
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzb5FpETfVLJ_uyDj-LPhQnQ0QMhNjx8wvEOjY-mO_7H8bClROaLJnUVrltNDA5_gk/exec"; 
+        let globalData = null;
+
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-view').forEach(v => v.classList.add('hide-view'));
+            document.getElementById('view-' + tabId).classList.remove('hide-view');
+            
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+            
+            if(window.innerWidth < 1024) toggleSidebar();
+        }
+
+        async function fetchAdminData() {
+            try {
+                const res = await fetch(SCRIPT_URL, { 
+                    method: 'POST', 
+                    body: JSON.stringify({ action: 'adminFetchAll' }) 
+                });
+                globalData = await res.json();
+                updateStats();
+                renderUsers();
+                renderFeed();
+            } catch (e) {
+                showModal('Connection Error', 'Ensure your Script URL is valid and permissions are granted.', '❌');
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('stat-posts').innerText = globalData.allPosts.length;
+            // Update other stats...
+        }
+
+        function renderUsers() {
+            const body = document.getElementById('user-table-body');
+            body.innerHTML = globalData.allUsers.map(u => `
+                <tr class="border-t border-white/5 hover:bg-white/5">
+                    <td class="p-5 font-bold">${u[0]}</td>
+                    <td class="p-5 text-slate-400">${u[1]}</td>
+                    <td class="p-5"><span class="px-3 py-1 rounded-full ${u[5] === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}">${u[5]}</span></td>
+                    <td class="p-5 text-right">
+                        <button onclick="toggleUser('${u[1]}')" class="text-cyan-400 font-black">TOGGLE</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderFeed() {
+            const container = document.getElementById('admin-feed-container');
+            container.innerHTML = globalData.allPosts.reverse().map(p => `
+                <div class="glass p-6 rounded-[2rem] border-l-4 ${p[4] ? 'border-pink-500' : 'border-slate-700'}">
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="text-[10px] font-black uppercase text-cyan-400">${p[1]} <span class="text-slate-600 ml-2">(${p[4] ? 'ANON' : 'PUBLIC'})</span></span>
+                        <button onclick="confirmDelete('${p[0]}')" class="text-slate-700 hover:text-pink-500"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                    <p class="text-sm text-slate-300">${p[2]}</p>
+                </div>
+            `).join('');
+        }
+
+        function showModal(title, msg, icon, buttons = []) {
+            const modal = document.getElementById('admin-modal');
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-msg').innerText = msg;
+            document.getElementById('modal-icon').innerHTML = icon;
+            
+            const actionContainer = document.getElementById('modal-actions');
+            actionContainer.innerHTML = '';
+            
+            if(buttons.length === 0) buttons = [{ text: 'CLOSE', class: 'bg-slate-800', onclick: () => modal.classList.add('hide-view') }];
+
+            buttons.forEach(btn => {
+                const b = document.createElement('button');
+                b.className = `flex-1 py-3 rounded-xl font-bold text-xs uppercase tracking-widest ${btn.class}`;
+                b.innerText = btn.text;
+                b.onclick = btn.onclick;
+                actionContainer.appendChild(b);
+            });
+            modal.classList.remove('hide-view');
+        }
+
+        
+function confirmDelete(postId) {
+    showModal(
+        'Nuclear Wipe?', 
+        'This will permanently delete this gossip and all its comments from class records.', 
+        '⚠️', 
+        [
+            { text: 'CANCEL', class: 'bg-slate-800', onclick: closeModal },
+            { text: 'WIPE TEA', class: 'bg-pink-600', onclick: () => executeDelete(postId) }
+        ]
+    );
+}
+
+
+async function executeDelete(postId) {
+    closeModal(); // Close the confirmation modal
+    showModal('Processing...', 'Purging records from the server...', '☢️', []); // Show loading state
+    
+    try {
+        const res = await fetch(SCRIPT_URL, { 
+            method: 'POST', 
+            body: JSON.stringify({ 
+                action: 'adminDeletePost',
+                postId: postId 
+            }) 
+        });
+        
+        const responseText = await res.text();
+        
+        if (responseText.includes('Success')) {
+            closeModal();
+            fetchAdminData(); // Refresh the dashboard to show it's gone
+        } else {
+            showModal('Error', 'Server refused the delete request.', '❌');
+        }
+    } catch (e) {
+        showModal('Failed', 'Network error. Check your connection.', '📡');
+    }
+}
+
+        window.onload = fetchAdminData;
+    </script>
+</body>
+</html>
